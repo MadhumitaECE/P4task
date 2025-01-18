@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather App</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Weather App</h1>
+    <div class="location-input">
+      <input type="text" id="location" placeholder="Enter city name" />
+      <button id="getWeatherBtn">Get Weather</button>
+    </div>
+    <div id="weatherInfo" class="weather-info">
+      <!-- Weather details will be displayed here -->
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+/* Reset default margins and padding */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f3f3f3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  text-align: center;
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  margin-bottom: 20px;
+  font-size: 2rem;
+}
+
+.location-input {
+  margin-bottom: 20px;
+}
+
+#location {
+  padding: 10px;
+  font-size: 1rem;
+  margin-right: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+#location:focus {
+  outline: none;
+  border-color: #007BFF;
+}
+
+#getWeatherBtn {
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#getWeatherBtn:hover {
+  background-color: #0056b3;
+}
+
+.weather-info {
+  margin-top: 20px;
+}
+
+.weather-info p {
+  font-size: 1.2rem;
+  margin: 5px 0;
+}
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+const getWeatherBtn = document.getElementById("getWeatherBtn");
+const locationInput = document.getElementById("location");
+const weatherInfo = document.getElementById("weatherInfo");
+
+// Your OpenWeatherMap API key (replace with your own)
+const apiKey = "YOUR_API_KEY"; // Get it from https://openweathermap.org/api
+
+// Function to fetch weather data by city name
+async function fetchWeatherByCity(city) {
+  try {
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+    const data = await response.json();
+
+    if (data.cod === "404") {
+      weatherInfo.innerHTML = `<p>City not found!</p>`;
+      return;
+    }
+
+    const { name, main, weather, wind } = data;
+    displayWeather(name, main, weather, wind);
+  } catch (error) {
+    weatherInfo.innerHTML = `<p>Failed to fetch weather data. Please try again.</p>`;
+  }
+}
+
+// Function to display weather data
+function displayWeather(city, main, weather, wind) {
+  weatherInfo.innerHTML = `
+    <h2>Weather in ${city}</h2>
+    <p><strong>Temperature:</strong> ${main.temp}°C</p>
+    <p><strong>Weather:</strong> ${weather[0].description}</p>
+    <p><strong>Humidity:</strong> ${main.humidity}%</p>
+    <p><strong>Wind Speed:</strong> ${wind.speed} m/s</p>
+  `;
+}
+
+// Event listener for the "Get Weather" button
+getWeatherBtn.addEventListener("click", () => {
+  const city = locationInput.value.trim();
+  if (city) {
+    fetchWeatherByCity(city);
+  } else {
+    weatherInfo.innerHTML = `<p>Please enter a city name.</p>`;
+  }
+});
+
+// Optionally, you can fetch the user's location automatically
+function fetchWeatherByGeolocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const { latitude, longitude } = position.coords;
+      fetchWeatherByCoordinates(latitude, longitude);
+    });
+  } else {
+    weatherInfo.innerHTML = `<p>Geolocation is not supported by this browser.</p>`;
+  }
+}
+
+// Fetch weather data by geolocation (latitude and longitude)
+async function fetchWeatherByCoordinates(lat, lon) {
+  try {
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`);
+    const data = await response.json();
+
+    if (data.cod === "404") {
+      weatherInfo.innerHTML = `<p>Location not found!</p>`;
+      return;
+    }
+
+    const { name, main, weather, wind } = data;
+    displayWeather(name, main, weather, wind);
+  } catch (error) {
+    weatherInfo.innerHTML = `<p>Failed to fetch weather data. Please try again.</p>`;
+  }
+}
+
+// Optionally, auto-fetch weather for the user's location on page load
+// fetchWeatherByGeolocation();
+
